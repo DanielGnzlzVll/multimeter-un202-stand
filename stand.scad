@@ -174,16 +174,16 @@ module leg() {
                 translate([0, 0, knuckle_r])
                     rotate([-90, 0, 0])
                         cylinder(d = knuckle_od, h = leg_knuckle_w, center = true);
-                translate([root_x, -leg_w/2, knuckle_r - leg_t/2])
+                translate([root_x, -leg_w/2, 0])
                     cube([0.1, leg_w, leg_t]);
             }
             hull() {
-                translate([root_x, -leg_w/2, knuckle_r - leg_t/2])
+                translate([root_x, -leg_w/2, 0])
                     cube([0.1, leg_w, leg_t]);
-                translate([leg_length - foot_l, -leg_w/2, knuckle_r - leg_t/2])
+                translate([leg_length - foot_l, -leg_w/2, 0])
                     cube([0.1, leg_w, leg_t]);
             }
-            translate([leg_length - foot_l, -foot_w/2, knuckle_r - foot_t/2])
+            translate([leg_length - foot_l, -foot_w/2, 0])
                 cube([foot_l, foot_w, foot_t]);
         }
         translate([0, 0, knuckle_r])
