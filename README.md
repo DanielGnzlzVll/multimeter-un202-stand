@@ -5,9 +5,13 @@ the existing top case screw (the one just below the jaw) as the mount
 point. Three printed parts (pick one of the two base options) plus,
 for the screw-based base, one M3 screw and nut:
 
-- **`base_tab()`** — a small, thin tab that slides sideways under the
-  *loosened* top case screw (you don't remove it, just back it off a
-  couple of turns) and sits flush against the case once retightened.
+- **`base_tab()`** — a small, thin tab with a closed keyhole slot that
+  hooks under the *loosened* top case screw (you don't remove it, just
+  back it off a couple of turns) and sits flush against the case once
+  retightened. The slot is fully enclosed by material, not open to the
+  tab's edge, so it can't slide off by itself from a loosened screw,
+  vibration, or gravity — only by deliberately realigning it back over
+  the entry hole.
 - **`base_plug()`** — a hardware-free alternative: a peg that presses
   tightly into the screw's recess (~5.6mm) instead of using the screw
   at all. Simpler assembly, but it means pulling the screw out
@@ -141,13 +145,25 @@ than fudging `screw_height_from_bottom` (a measurement) or the angles
 - `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
   length against how far the leg has to swing out. Adjust and
   re-derive `leg_length` (automatic) if you want a shorter/longer leg.
+- `base_tab`'s slot is a closed keyhole (`entry_x`/`shank_x`/`taper_x`,
+  all derived from `screw_head_d`, `head_clearance`, and
+  `shank_hole_d`) instead of a slot open to the tab's edge. `base_l`
+  grew (11mm → 14mm) to fit it.
+- `leg`'s foot pad matches the strip's own width/thickness (`foot_w` =
+  `leg_w`, `foot_t` = `leg_t`) instead of being wider and thinner, so
+  the whole leg is one constant rectangular cross-section end to end —
+  it can be rotated 90° in the slicer (printed standing on edge for a
+  different layer orientation) without a flared foot sticking out past
+  the rotated profile.
 
 ## Assembly
 
 **With `base_tab` (screw stays in the meter):**
-1. Loosen (don't remove) the top case screw a couple of turns.
-2. Slide `base_tab` in sideways so the slot captures the shank, then
-   retighten the screw to clamp it flush.
+1. Loosen (don't remove) the top case screw enough for the head to
+   clear `base_t` plus pass through the keyhole's entry hole.
+2. Bring the tab up so the entry hole passes over the screw head, then
+   slide the tab so the shank moves into the channel and settles at
+   its resting hole. Retighten the screw to clamp it flush.
 
 **With `base_plug` (no hardware, screw comes out):**
 1. Remove the top case screw entirely.

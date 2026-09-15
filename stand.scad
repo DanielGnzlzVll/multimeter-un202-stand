@@ -58,11 +58,14 @@ base_t = 1.6;  // thickness -- must be thinner than the gap you get by
                // loosening the screw a couple of turns. Only the zone
                // that actually slides under the screw head stays this
                // thin -- see base_thick_t below.
-base_l = 11;   // length, insertion edge to hinge knuckles
+base_l = 14;   // length, insertion edge to hinge knuckles -- lengthened
+               // from 11mm to fit the closed keyhole slot below
 base_w = 14;   // width of the thin insertion zone -- widened from 9mm
                // so the screw head presses down on a much bigger flat
                // area, clamping the tab to the case more securely,
                // instead of a narrow strip barely wider than the head
+head_clearance = 0.6;  // extra diameter so the screw head slides
+                        // through the keyhole's entry hole easily
 
 // Past the screw hole, the tab doesn't need to stay thin -- nothing
 // there has to slide under the screw head -- so it tapers up to a
@@ -123,9 +126,15 @@ hinge_span    = 2 * finger_w + knuckle_gap;
 // pinched next to the knuckle and foot pad.
 leg_w  = 12;  // strip width
 leg_t  = 5;   // strip thickness
-foot_w = 18;
+// Foot pad's footprint matches the strip exactly (was 18x3, wider and
+// thinner than the strip's 12x5) so the whole leg is one constant
+// rectangular cross-section end to end. That lets it print standing
+// on edge (rotated 90 degrees from lying flat) for better layer
+// orientation along its length -- a flared/thinner foot would stick
+// out past the rotated profile and defeat the point.
+foot_w = leg_w;
 foot_l = 14;
-foot_t = 3;
+foot_t = leg_t;
 
 // ====================================================================
 // Teardrop hole -- printed horizontally (bore axis parallel to the
@@ -156,13 +165,24 @@ module teardrop_hole(d, h) {
 // Base tab (screw version)
 // ====================================================================
 module base_tab() {
-    // kept well clear of the knuckles (at x=base_l) so the hole-cutter
-    // doesn't notch into them
-    hole_x = base_l * 0.4;
-    // stay thin a bit past the screw hole for clearance, then taper up
+    // Closed keyhole slot instead of an open-sided one: a head-sized
+    // entry hole (entry_x), fully enclosed by material -- not open to
+    // the tab's edge -- connected by a narrow channel to where the
+    // shank actually rests once installed (shank_x). To install: back
+    // the screw out enough for the head to clear base_t, bring the tab
+    // up so the entry hole passes over the head, then slide it so the
+    // shank moves into the channel and settles at shank_x, then
+    // retighten. Because the entry hole isn't at the edge, the tab
+    // can't slide off by itself -- from a loosened screw, vibration,
+    // gravity, whatever -- it can only come off by being deliberately
+    // realigned back over the entry hole.
+    entry_d  = screw_head_d + head_clearance;
+    entry_x  = entry_d/2 + 1;
+    shank_x  = entry_x + 3.5;
+    // stay thin a bit past the shank hole for clearance, then taper up
     // to the thick anchor block -- the taper itself starts well clear
     // of the slot/hole cutting below
-    taper_x = hole_x + 2;
+    taper_x = shank_x + 1.5;
     difference() {
         union() {
             // thin insertion pad -- slides under the loosened screw head
@@ -193,10 +213,13 @@ module base_tab() {
                 translate([base_l, yc - finger_w/2, 0])
                     cube([knuckle_r + 1, finger_w, base_thick_t]);
         }
-        // open-sided slot + hole that captures the screw shank
-        translate([-1, -shank_hole_d/2, -0.5])
-            cube([hole_x + 1, shank_hole_d, base_t + 1]);
-        translate([hole_x, 0, -0.5])
+        // closed keyhole: entry hole for the screw head, channel, then
+        // the shank's resting hole -- none of it open to the tab's edge
+        translate([entry_x, 0, -0.5])
+            cylinder(d = entry_d, h = base_t + 1);
+        translate([entry_x, -shank_hole_d/2, -0.5])
+            cube([shank_x - entry_x, shank_hole_d, base_t + 1]);
+        translate([shank_x, 0, -0.5])
             cylinder(d = shank_hole_d, h = base_t + 1);
         // hinge bolt through both fingers -- cutter extends well past
         // the fingers' own Y edges (not just ~1mm) since a small margin
