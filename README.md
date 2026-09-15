@@ -29,7 +29,12 @@ All parts are laid out flat side-by-side at the bottom of the file,
 ready to print with no supports. Every M3 hinge bore uses a teardrop
 profile (circle + a 45° point on top) instead of a plain round hole,
 so it prints cleanly with no bridging/support even lying flat with the
-bore axis horizontal.
+bore axis horizontal. Each bore's cutter also extends well past the
+finger/knuckle's own edges (not just ~1mm) — a smaller margin reliably
+left a hair-thin sliver of uncut material right at the opening, close
+enough to being a real M3 screw obstruction to fix outright. Verified
+by literally modeling an M3 screw shaft and checking for zero overlap
+with each part.
 
 ## Why two hinges' worth of thinking, but only one moving joint
 
@@ -73,11 +78,15 @@ are adjustable at the top of `stand.scad`.
   the peg for a tight press fit. Both are guesses — start with a test
   print of just `base_plug()` before committing to a full print.
   (Only matters for `base_plug`.)
-- `base_plug`'s flange (16mm diameter, 3mm thick) and gusseted fingers
+- `base_plug`'s flange (22mm diameter, 3mm thick) and gusseted fingers
   are sized to comfortably out-span the hinge fingers and give the
   leg's leverage a wide shoulder to load into — deliberately sturdier
   than the bare minimum, since this piece takes all the load with no
   screw backing it up.
+- The hinge knuckle itself (`finger_w`, 6mm) is wider than the original
+  design (4mm) since the leg's knuckle — the part actually cantilevering
+  the leg's whole load — is only `finger_w - 0.4` wide, and 3.6mm was
+  thin enough to be a real breakage risk.
 - `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
   length against how far the leg has to swing out. Adjust and
   re-derive `leg_length` (automatic) if you want a shorter/longer leg.
