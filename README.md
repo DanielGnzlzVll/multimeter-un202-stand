@@ -72,7 +72,11 @@ are adjustable at the top of `stand.scad`.
   actually measured.
 - `base_t` (1.6mm default): must be thinner than the gap you actually
   get by loosening the screw a couple of turns. Thin it down if the
-  tab won't slide in. (Only matters for `base_tab`.)
+  tab won't slide in. (Only matters for `base_tab`.) Only the zone
+  that actually slides under the screw head stays this thin — past the
+  screw hole, `base_tab` tapers up to a much thicker, wider anchor
+  block (`base_thick_t` 5mm, `base_thick_w` 14mm) for the hinge
+  fingers, the same reasoning as `base_plug`'s peg-to-flange taper.
 - `peg_len` (6mm default) and `peg_interference` (0.15mm default): how
   deep the screw's recess actually is, and how much oversized to print
   the peg for a tight press fit. Both are guesses — start with a test

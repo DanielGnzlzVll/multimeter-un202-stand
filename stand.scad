@@ -49,9 +49,20 @@ leg_length = screw_height_from_bottom * sin(tilt_angle) / sin(tilt_angle - deplo
 
 // ---------------- Base tab (captures under the case screw) -------
 base_t = 1.6;  // thickness -- must be thinner than the gap you get by
-               // loosening the screw a couple of turns
+               // loosening the screw a couple of turns. Only the zone
+               // that actually slides under the screw head stays this
+               // thin -- see base_thick_t below.
 base_l = 11;   // length, insertion edge to hinge knuckles
-base_w = 9;    // width
+base_w = 9;    // width of the thin insertion zone
+
+// Past the screw hole, the tab doesn't need to stay thin -- nothing
+// there has to slide under the screw head -- so it tapers up to a
+// much thicker, wider anchor block for the hinge fingers to embed
+// into, the same way base_plug()'s peg tapers into its flange.
+base_thick_t = 5;   // thickness at the hinge end
+base_thick_w = 14;  // width at the hinge end -- out-spans the fingers
+                     // (hinge_span = 18mm) with real margin, instead of
+                     // the original 9mm tab the fingers overhung badly
 
 // ---------------- Press-fit base plug (no hardware) ---------------
 peg_interference = 0.15;  // print the peg this much OVER recess_d for a
@@ -137,10 +148,22 @@ module base_tab() {
     // kept well clear of the knuckles (at x=base_l) so the hole-cutter
     // doesn't notch into them
     hole_x = base_l * 0.4;
+    // stay thin a bit past the screw hole for clearance, then taper up
+    // to the thick anchor block -- the taper itself starts well clear
+    // of the slot/hole cutting below
+    taper_x = hole_x + 2;
     difference() {
         union() {
+            // thin insertion pad -- slides under the loosened screw head
             translate([0, -base_w/2, 0])
-                cube([base_l, base_w, base_t]);
+                cube([taper_x, base_w, base_t]);
+            // taper from the thin pad up to a thick, wide anchor block
+            hull() {
+                translate([taper_x - 0.1, -base_w/2, 0])
+                    cube([0.1, base_w, base_t]);
+                translate([base_l - 0.1, -base_thick_w/2, 0])
+                    cube([0.1, base_thick_w, base_thick_t]);
+            }
             for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
                 translate([base_l, yc, knuckle_r])
                     rotate([-90, 0, 0])
