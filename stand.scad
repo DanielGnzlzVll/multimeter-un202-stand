@@ -57,10 +57,36 @@ base_w = 9;    // width
 peg_interference = 0.15;  // print the peg this much OVER recess_d for a
                            // tight press fit; sand down if too tight
 peg_d    = recess_d + peg_interference;
-peg_len  = 5;   // ADJUST -- how deep the recess actually is
-flange_d = 9;   // rests on the flat case surface around the recess
-flange_t = 1.5;
-lead_in  = 1;   // small chamfer at the peg's tip so it starts straight
+peg_len  = 6;    // ADJUST -- how deep the recess actually is (bumped up
+                  // from 5mm for a bit more friction-fit engagement;
+                  // shorten this back down if the real recess is
+                  // shallower)
+flange_d = 16;    // rests on the flat case surface around the recess.
+                  // Was 9mm -- barely bigger than the 7mm knuckle_od, so
+                  // the hinge fingers (which together span hinge_span =
+                  // 12mm) actually overhung the shoulder. Sized up past
+                  // the fingers' own footprint with real margin, both
+                  // to give the leg's leverage a wide shoulder to load
+                  // into AND to leave room for the gusset fillet below
+                  // to actually bulge out past the fingers instead of
+                  // being swallowed by them.
+flange_t = 3;     // shoulder thickness -- doubled from 1.5mm so the
+                  // flange resists the leg's leverage without flexing
+                  // or cracking under load
+lead_in  = 1;     // small chamfer at the peg's tip so it starts straight
+
+// Gusset dimensions: each hinge finger meets the flange through a
+// hull()'d fillet instead of a bare, sharply-cornered tangent (same
+// hull-taper trick leg() uses to blend its knuckle into the strip).
+// The pad's footprint is seated 1mm into the flange's own thickness
+// (guaranteed volumetric overlap, not a zero-area touching line) and
+// rises gusset_h above the flange top before the hull blends it into
+// the finger cylinder. gusset_w is deliberately bigger than knuckle_od
+// (7mm) -- anything narrower ends up entirely swallowed by the
+// finger's own cylinder (hull of a shape inside another is a no-op),
+// so it has to actually stick out past the finger to add material.
+gusset_w = 9;   // x-extent of the gusset's flange-side footprint
+gusset_h = 2;   // how far the gusset rises above the flange top
 
 // ---------------- Hinge (M3 screw + nut = friction pivot) --------
 m3_hole_d     = 3.6;  // bumped from 3.4 -- FDM horizontal holes commonly print
@@ -139,6 +165,11 @@ module base_tab() {
 // Base plug (press-fit version, no hardware)
 // ====================================================================
 module base_plug() {
+    // finger's bottom tangent starts at the flange's own base (not its
+    // top) so it genuinely overlaps the flange's solid volume through
+    // its full thickness, instead of just touching it along a
+    // zero-area line
+    finger_z = peg_len + knuckle_r;
     difference() {
         union() {
             cylinder(d1 = peg_d * 0.8, d2 = peg_d, h = lead_in);
@@ -146,15 +177,19 @@ module base_plug() {
                 cylinder(d = peg_d, h = peg_len - lead_in);
             translate([0, 0, peg_len])
                 cylinder(d = flange_d, h = flange_t);
-            // fingers' bottom tangent starts at the flange's own base
-            // (not its top) so they genuinely overlap its solid volume
-            // instead of just touching it along a zero-area line
+            // each finger is hull()'d to a gusset pad seated in the
+            // flange, so the finger-to-flange joint is a gradual taper
+            // instead of a sharp, stress-concentrating inside corner
             for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
-                translate([0, yc, peg_len + knuckle_r])
-                    rotate([-90, 0, 0])
-                        cylinder(d = knuckle_od, h = finger_w, center = true);
+                hull() {
+                    translate([-gusset_w/2, yc - finger_w/2, peg_len + flange_t - 1])
+                        cube([gusset_w, finger_w, gusset_h + 1]);
+                    translate([0, yc, finger_z])
+                        rotate([-90, 0, 0])
+                            cylinder(d = knuckle_od, h = finger_w, center = true);
+                }
         }
-        translate([0, 0, peg_len + knuckle_r])
+        translate([0, 0, finger_z])
             rotate([-90, 0, 0])
                 teardrop_hole(m3_hole_d, hinge_span + 2);
     }
