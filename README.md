@@ -111,13 +111,23 @@ are adjustable at the top of `stand.scad`.
   design (4mm) since the leg's knuckle — the part actually cantilevering
   the leg's whole load — is only `finger_w - 0.4` wide, and 3.6mm was
   thin enough to be a real breakage risk.
-- `base_tab` and `base_plug`'s two hinge fingers are connected only at
-  the bottom, through the tab/flange -- deliberately. Their tops stay
-  free-standing: the gap above and between them is exactly where the
-  leg's own strip has to sweep through as it pivots, so any fixed
-  material bridging their tops (tried once, reverted) blocks the hinge
-  from moving at all, even though it looks like harmless reinforcement
-  in a static render.
+- `base_tab` and `base_plug`'s two hinge fingers stay free-standing at
+  the top -- deliberately. The gap above and between them is exactly
+  where the leg's own strip has to sweep through as it pivots, so any
+  fixed material bridging their tops (tried once, reverted) blocks the
+  hinge from moving at all, even though it looks like harmless
+  reinforcement in a static render.
+- `base_tab`'s original taper only built up material on the near side
+  (toward the tab) of each finger, leaving the far side of each
+  cylinder completely unsupported. Fixed with a matching cap on that
+  far side -- flat, at the same low Z as the rest of the anchor block
+  (not stacked upward), and confined to each finger's own Y-width so
+  it can't reach into the gap between them. Verified this doesn't
+  introduce any new collision with the leg at any rotation angle
+  (checked 0-180° in 15-30° steps): identical residual overlap with or
+  without the cap, meaning what's left is a small pre-existing
+  tolerance artifact from the tight ~0.2mm knuckle-to-gap clearance,
+  not something this fix caused.
 - `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
   length against how far the leg has to swing out. Adjust and
   re-derive `leg_length` (automatic) if you want a shorter/longer leg.

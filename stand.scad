@@ -170,6 +170,19 @@ module base_tab() {
                 translate([base_l, yc, knuckle_r])
                     rotate([-90, 0, 0])
                         cylinder(d = knuckle_od, h = finger_w, center = true);
+            // The taper above only builds up material on the near (-X,
+            // toward the tab) side of each finger -- it stops exactly at
+            // the finger's own center, leaving the far (+X) half of each
+            // cylinder completely unsupported. This adds a matching cap
+            // on that far side, flat in the XY plane at the same low Z
+            // as the rest of the anchor block (not stacked upward -- it
+            // stays well clear of the fingers' own top, so it can't be
+            // in the leg's swept rotation path). Only spans each
+            // finger's own Y width, not the gap between them, so it
+            // can't interfere with the leg's knuckle sliding in there.
+            for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
+                translate([base_l, yc - finger_w/2, 0])
+                    cube([knuckle_r + 1, finger_w, base_thick_t]);
         }
         // open-sided slot + hole that captures the screw shank
         translate([-1, -shank_hole_d/2, -0.5])
