@@ -1,15 +1,19 @@
 // ============================================================
 // Folding kickstand for Unity UN202 clamp multimeter
 //
-// Two printed parts + one M3 screw and nut:
-//   1) base_tab()  - slides sideways under the loosened top case
-//                    screw, sits flush against the case.
-//   2) leg()       - attaches to the base through an M3 bolt
-//                    hinge (screw + nut = friction pivot). Folds
-//                    flat against the case when stowed, swings
-//                    out to prop the meter up when deployed.
-//                    Tightening the nut sets how much friction
-//                    holds whatever angle you leave it at.
+// One leg + a choice of two base attachments, plus one M3 screw
+// and nut for the hinge:
+//   1) base_tab()   - slides sideways under the loosened top case
+//                     screw, sits flush against the case.
+//   2) base_plug()  - alternative, no-hardware attachment: a peg
+//                     that presses tightly into the screw's
+//                     recess (no screw needed at all).
+//   3) leg()        - attaches to whichever base through an M3
+//                     bolt hinge (screw + nut = friction pivot).
+//                     Folds flat against the case when stowed,
+//                     swings out to prop the meter up when
+//                     deployed. Tightening the nut sets how much
+//                     friction holds whatever angle you leave it.
 //
 // MOST NUMBERS BELOW ARE ESTIMATES from product photos, not the
 // real part. Print, test-fit, and correct the "ADJUST" sections.
@@ -22,6 +26,7 @@ screw_head_d     = 5.1;   // measured
 shank_d          = 2.6;   // ESTIMATE -- verify against the real screw shank
 shank_clearance  = 0.5;
 shank_hole_d     = shank_d + shank_clearance;
+recess_d         = 5.6;   // measured diameter of the screw's recess/counterbore
 
 // Distance from the meter's bottom edge, along the back, up to the
 // TOP screw (below the jaw). Estimated from product photos --
@@ -48,6 +53,15 @@ base_t = 1.6;  // thickness -- must be thinner than the gap you get by
 base_l = 11;   // length, insertion edge to hinge knuckles
 base_w = 9;    // width
 
+// ---------------- Press-fit base plug (no hardware) ---------------
+peg_interference = 0.15;  // print the peg this much OVER recess_d for a
+                           // tight press fit; sand down if too tight
+peg_d    = recess_d + peg_interference;
+peg_len  = 5;   // ADJUST -- how deep the recess actually is
+flange_d = 9;   // rests on the flat case surface around the recess
+flange_t = 1.5;
+lead_in  = 1;   // small chamfer at the peg's tip so it starts straight
+
 // ---------------- Hinge (M3 screw + nut = friction pivot) --------
 m3_hole_d     = 3.4;
 knuckle_od    = 7;
@@ -57,15 +71,43 @@ knuckle_gap   = finger_w;          // gap between the two base fingers
 leg_knuckle_w = finger_w - 0.4;    // leg's single knuckle, fits the gap
 hinge_span    = 2 * finger_w + knuckle_gap;
 
-// ---------------- Leg ---------------------------------------------
-leg_w  = 8;   // strip width
-leg_t  = 3;   // strip thickness
+// ---------------- Leg -----------------------------------------------
+// Widened from the previous version, including the "waist" right
+// after the hinge knuckle, both for strength and so it doesn't look
+// pinched next to the knuckle and foot pad.
+leg_w  = 12;  // strip width
+leg_t  = 5;   // strip thickness
 foot_w = 18;
 foot_l = 14;
 foot_t = 3;
 
 // ====================================================================
-// Base tab
+// Teardrop hole -- printed horizontally (bore axis parallel to the
+// bed), a plain round hole needs a bridged top; a teardrop profile
+// (circle + a 45 degree point on top) prints with no bridging or
+// support at all. Used for every M3 hinge bore in this file.
+// ====================================================================
+module teardrop2d(r) {
+    union() {
+        circle(r = r);
+        polygon(points = [
+            [-r * 0.7071, -r * 0.7071],
+            [ r * 0.7071, -r * 0.7071],
+            [0, -r * 1.4142]
+        ]);
+    }
+}
+
+module teardrop_hole(d, h) {
+    // apex points toward local +Z pre-rotation; callers rotate([-90,0,0])
+    // this so the bore axis lands on Y and the apex ends up on world +Z
+    // (pointing up, away from the bed)
+    linear_extrude(height = h, center = true)
+        teardrop2d(d / 2);
+}
+
+// ====================================================================
+// Base tab (screw version)
 // ====================================================================
 module base_tab() {
     // kept well clear of the knuckles (at x=base_l) so the hole-cutter
@@ -88,7 +130,32 @@ module base_tab() {
         // hinge bolt through both fingers
         translate([base_l, 0, knuckle_r])
             rotate([-90, 0, 0])
-                cylinder(d = m3_hole_d, h = hinge_span + 2, center = true);
+                teardrop_hole(m3_hole_d, hinge_span + 2);
+    }
+}
+
+// ====================================================================
+// Base plug (press-fit version, no hardware)
+// ====================================================================
+module base_plug() {
+    difference() {
+        union() {
+            cylinder(d1 = peg_d * 0.8, d2 = peg_d, h = lead_in);
+            translate([0, 0, lead_in])
+                cylinder(d = peg_d, h = peg_len - lead_in);
+            translate([0, 0, peg_len])
+                cylinder(d = flange_d, h = flange_t);
+            // fingers' bottom tangent starts at the flange's own base
+            // (not its top) so they genuinely overlap its solid volume
+            // instead of just touching it along a zero-area line
+            for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
+                translate([0, yc, peg_len + knuckle_r])
+                    rotate([-90, 0, 0])
+                        cylinder(d = knuckle_od, h = finger_w, center = true);
+        }
+        translate([0, 0, peg_len + knuckle_r])
+            rotate([-90, 0, 0])
+                teardrop_hole(m3_hole_d, hinge_span + 2);
     }
 }
 
@@ -96,13 +163,21 @@ module base_tab() {
 // Leg
 // ====================================================================
 module leg() {
+    // short tapered root blends the round knuckle into the flat strip
+    // (also removes the abrupt step that made the knuckle end harder
+    // to print cleanly)
+    root_x = knuckle_r + 2;
     difference() {
         union() {
-            translate([0, 0, knuckle_r])
-                rotate([-90, 0, 0])
-                    cylinder(d = knuckle_od, h = leg_knuckle_w, center = true);
             hull() {
-                translate([0, -leg_w/2, knuckle_r - leg_t/2])
+                translate([0, 0, knuckle_r])
+                    rotate([-90, 0, 0])
+                        cylinder(d = knuckle_od, h = leg_knuckle_w, center = true);
+                translate([root_x, -leg_w/2, knuckle_r - leg_t/2])
+                    cube([0.1, leg_w, leg_t]);
+            }
+            hull() {
+                translate([root_x, -leg_w/2, knuckle_r - leg_t/2])
                     cube([0.1, leg_w, leg_t]);
                 translate([leg_length - foot_l, -leg_w/2, knuckle_r - leg_t/2])
                     cube([0.1, leg_w, leg_t]);
@@ -112,12 +187,13 @@ module leg() {
         }
         translate([0, 0, knuckle_r])
             rotate([-90, 0, 0])
-                cylinder(d = m3_hole_d, h = leg_knuckle_w + 2, center = true);
+                teardrop_hole(m3_hole_d, leg_knuckle_w + 2);
     }
 }
 
 // ====================================================================
-// Layout for printing -- both parts flat on the bed, side by side
+// Layout for printing -- all parts flat on the bed, side by side
 // ====================================================================
 base_tab();
-translate([0, base_w/2 + 10, 0]) leg();
+translate([0, base_w/2 + 8, 0]) base_plug();
+translate([0, base_w/2 + 24, 0]) leg();
