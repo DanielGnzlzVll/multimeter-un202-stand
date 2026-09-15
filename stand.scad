@@ -164,16 +164,25 @@ module base_plug() {
 // Leg
 // ====================================================================
 module leg() {
-    // short tapered root blends the round knuckle into the flat strip
-    // (also removes the abrupt step that made the knuckle end harder
-    // to print cleanly)
-    root_x = knuckle_r + 2;
+    // Two-stage taper: the first stage keeps the SAME width as the
+    // knuckle (leg_knuckle_w) so the hull doesn't flare out over the
+    // hinge hole's open ends and pinch them nearly shut; only the
+    // second stage (safely past the knuckle) widens out to the full
+    // strip cross-section.
+    collar_x = knuckle_r + 1;
+    root_x   = knuckle_r + 4;
     difference() {
         union() {
             hull() {
                 translate([0, 0, knuckle_r])
                     rotate([-90, 0, 0])
                         cylinder(d = knuckle_od, h = leg_knuckle_w, center = true);
+                translate([collar_x, -leg_knuckle_w/2, 0])
+                    cube([0.1, leg_knuckle_w, knuckle_od]);
+            }
+            hull() {
+                translate([collar_x, -leg_knuckle_w/2, 0])
+                    cube([0.1, leg_knuckle_w, knuckle_od]);
                 translate([root_x, -leg_w/2, 0])
                     cube([0.1, leg_w, leg_t]);
             }
