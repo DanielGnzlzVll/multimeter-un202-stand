@@ -25,6 +25,24 @@ Render/print with:
 openscad --render -o stand.stl stand.scad
 ```
 
+## Renders
+
+All three parts, laid out as they print:
+
+![All parts](renders/current/overview-all-parts.png)
+
+`base_tab` — thin insertion tab tapering into a thick, bridged hinge anchor:
+
+![base_tab](renders/current/base-tab.png)
+
+`base_plug` — press-fit peg, flange, and the same bridged hinge anchor:
+
+![base_plug](renders/current/base-plug.png)
+
+`leg` — hinge knuckle, tapered strip, foot pad:
+
+![leg](renders/current/leg.png)
+
 All parts are laid out flat side-by-side at the bottom of the file,
 ready to print with no supports. Every M3 hinge bore uses a teardrop
 profile (circle + a 45° point on top) instead of a plain round hole,
@@ -77,11 +95,13 @@ are adjustable at the top of `stand.scad`.
   screw hole, `base_tab` tapers up to a much thicker, wider anchor
   block (`base_thick_t` 5mm, `base_thick_w` 14mm) for the hinge
   fingers, the same reasoning as `base_plug`'s peg-to-flange taper.
-- `peg_len` (6mm default) and `peg_interference` (0.15mm default): how
+- `peg_len` (5.5mm default) and `peg_interference` (0.15mm default): how
   deep the screw's recess actually is, and how much oversized to print
-  the peg for a tight press fit. Both are guesses — start with a test
-  print of just `base_plug()` before committing to a full print.
-  (Only matters for `base_plug`.)
+  the peg for a tight press fit. `peg_len` is kept 0.5mm short of the
+  full estimated recess depth so the peg doesn't bottom out/crash into
+  whatever is at the base of that hole before the flange seats flush.
+  Both are guesses — start with a test print of just `base_plug()`
+  before committing to a full print. (Only matters for `base_plug`.)
 - `base_plug`'s flange (22mm diameter, 3mm thick) and gusseted fingers
   are sized to comfortably out-span the hinge fingers and give the
   leg's leverage a wide shoulder to load into — deliberately sturdier
@@ -91,6 +111,13 @@ are adjustable at the top of `stand.scad`.
   design (4mm) since the leg's knuckle — the part actually cantilevering
   the leg's whole load — is only `finger_w - 0.4` wide, and 3.6mm was
   thin enough to be a real breakage risk.
+- Both `base_tab` and `base_plug`'s two hinge fingers used to be
+  connected only at the bottom (through the tab/flange), left as bare
+  free-standing pins at the top — all the leg's leverage had to be
+  resisted by each finger cantilevering alone. `hinge_bridge()` spans
+  across their tops to close that into a single rigid loop, while
+  staying lifted a small clearance above the gap in the middle so it
+  doesn't touch the leg's own knuckle once assembled.
 - `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
   length against how far the leg has to swing out. Adjust and
   re-derive `leg_length` (automatic) if you want a shorter/longer leg.
