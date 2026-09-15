@@ -31,11 +31,11 @@ All three parts, laid out as they print:
 
 ![All parts](renders/current/overview-all-parts.png)
 
-`base_tab` — thin insertion tab tapering into a thick, bridged hinge anchor:
+`base_tab` — thin insertion tab tapering into a thick hinge anchor:
 
 ![base_tab](renders/current/base-tab.png)
 
-`base_plug` — press-fit peg, flange, and the same bridged hinge anchor:
+`base_plug` — press-fit peg, flange, and the same thick hinge anchor:
 
 ![base_plug](renders/current/base-plug.png)
 
@@ -111,13 +111,13 @@ are adjustable at the top of `stand.scad`.
   design (4mm) since the leg's knuckle — the part actually cantilevering
   the leg's whole load — is only `finger_w - 0.4` wide, and 3.6mm was
   thin enough to be a real breakage risk.
-- Both `base_tab` and `base_plug`'s two hinge fingers used to be
-  connected only at the bottom (through the tab/flange), left as bare
-  free-standing pins at the top — all the leg's leverage had to be
-  resisted by each finger cantilevering alone. `hinge_bridge()` spans
-  across their tops to close that into a single rigid loop, while
-  staying lifted a small clearance above the gap in the middle so it
-  doesn't touch the leg's own knuckle once assembled.
+- `base_tab` and `base_plug`'s two hinge fingers are connected only at
+  the bottom, through the tab/flange -- deliberately. Their tops stay
+  free-standing: the gap above and between them is exactly where the
+  leg's own strip has to sweep through as it pivots, so any fixed
+  material bridging their tops (tried once, reverted) blocks the hinge
+  from moving at all, even though it looks like harmless reinforcement
+  in a static render.
 - `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
   length against how far the leg has to swing out. Adjust and
   re-derive `leg_length` (automatic) if you want a shorter/longer leg.

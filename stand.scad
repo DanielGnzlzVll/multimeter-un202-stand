@@ -144,39 +144,6 @@ module teardrop_hole(d, h) {
 }
 
 // ====================================================================
-// Hinge bridge -- both base_tab() and base_plug() had their two hinge
-// fingers connected only at the bottom (through the tab/flange), with
-// nothing tying their tops together, so all the leg's leverage had to
-// be resisted by each finger cantilevering alone. This spans across
-// the tops of both fingers to turn them into a single closed loop.
-//
-// It must stay clear of the leg's own knuckle, which sits in the gap
-// between the fingers at the same height as them once assembled -- so
-// the bridge only embeds into the two FINGERS themselves (real
-// overlap, not a zero-area tangent) and stays lifted a small
-// clearance above the gap in between, rather than embedding uniformly
-// across the whole span.
-//
-// anchor_x = X center of the fingers (base_l for base_tab, 0 for
-// base_plug); base_z = Z where the fingers' own bottom tangent sits
-// (0 for base_tab, peg_len for base_plug).
-// ====================================================================
-module hinge_bridge(anchor_x, base_z) {
-    bridge_t  = 3;     // thickness of the connecting span
-    clearance = 0.4;   // gap left above the leg's knuckle in the middle
-    embed     = 1.5;   // how far the bridge sinks into each finger's top
-    top_of_finger = base_z + knuckle_od;
-    // spanning slab -- lifted clear of the leg's knuckle in the gap
-    translate([anchor_x - knuckle_r, -hinge_span/2, top_of_finger + clearance])
-        cube([knuckle_od, hinge_span, bridge_t]);
-    // embed pads fusing the slab down into each finger's own top,
-    // only over the fingers themselves (not over the gap)
-    for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
-        translate([anchor_x - knuckle_r, yc - finger_w/2, top_of_finger - embed])
-            cube([knuckle_od, finger_w, embed + clearance]);
-}
-
-// ====================================================================
 // Base tab (screw version)
 // ====================================================================
 module base_tab() {
@@ -203,7 +170,6 @@ module base_tab() {
                 translate([base_l, yc, knuckle_r])
                     rotate([-90, 0, 0])
                         cylinder(d = knuckle_od, h = finger_w, center = true);
-            hinge_bridge(base_l, 0);
         }
         // open-sided slot + hole that captures the screw shank
         translate([-1, -shank_hole_d/2, -0.5])
@@ -254,7 +220,6 @@ module base_plug() {
                         rotate([-90, 0, 0])
                             cylinder(d = knuckle_od, h = finger_w, center = true);
                 }
-            hinge_bridge(0, peg_len);
         }
         // hinge bolt through both fingers -- cutter extends well past
         // the fingers' own Y edges (not just ~1mm) since a small margin
