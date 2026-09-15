@@ -63,7 +63,8 @@ flange_t = 1.5;
 lead_in  = 1;   // small chamfer at the peg's tip so it starts straight
 
 // ---------------- Hinge (M3 screw + nut = friction pivot) --------
-m3_hole_d     = 3.4;
+m3_hole_d     = 3.6;  // bumped from 3.4 -- FDM horizontal holes commonly print
+                       // a bit undersized, and 3.4 was too tight for a clean M3 fit
 knuckle_od    = 7;
 knuckle_r     = knuckle_od / 2;
 finger_w      = 4;                 // width of each base knuckle finger
