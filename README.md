@@ -1,54 +1,75 @@
 # Unity UN202 multimeter stand
 
-A rigid, single-piece kickstand for the Unity UN202 clamp multimeter. It
-clips onto the existing case screw on the back (no need to remove the
-screw) via a keyhole slot, while the meter's bottom edge rests on the
-table. Because the geometry is fixed, the meter can't lean back past the
-angle set in `tilt_angle` — it's a hard limit, not an adjustable hinge.
+A compact folding kickstand for the Unity UN202 clamp multimeter, using
+the existing top case screw (the one just below the jaw) as the mount
+point. Two printed parts plus one M3 screw and nut:
 
-Open `stand.scad` in OpenSCAD to preview/edit, or render an STL with:
+- **`base_tab()`** — a small, thin tab that slides sideways under the
+  *loosened* top case screw (you don't remove it, just back it off a
+  couple of turns) and sits flush against the case once retightened.
+- **`leg()`** — attaches to the base through a printed knuckle hinge,
+  pinned with the M3 screw and nut. This is the part that actually
+  folds flat against the meter when stowed and swings out to prop it
+  up when deployed. **The M3 nut is the friction adjustment** —
+  tighter clamps the knuckles together harder, holding the leg at
+  whatever angle you leave it, including flush against the case.
+
+Render/print with:
 
 ```
 openscad --render -o stand.stl stand.scad
 ```
 
+Both parts are laid out flat side-by-side at the bottom of the file,
+ready to print with no supports.
+
+## Why two hinges' worth of thinking, but only one moving joint
+
+The case screw's axis points straight into the case, so anything
+pivoting directly on it can only sweep flat across the back (like a
+clock hand) — it can't lift away from the surface to prop the meter
+up. So the *screw* just anchors a fixed tab, and a **separate**
+knuckle hinge (axis parallel to the case surface, pinned by the M3
+hardware) is what actually lets the leg fold out. That second hinge is
+the only moving joint.
+
+## Leg length math
+
+With the meter resting on its bottom edge and tilted back to
+`tilt_angle`, the top screw sits at height `screw_height_from_bottom *
+sin(tilt_angle)` above the table. Swinging the leg out from
+flush-against-the-case by `deploy_hinge_angle` needs a leg length of:
+
+```
+leg_length = screw_height_from_bottom * sin(tilt_angle) / sin(tilt_angle - deploy_hinge_angle)
+```
+
+(`deploy_hinge_angle` must stay less than `tilt_angle`, or the leg
+never reaches the table no matter how long it is.) All three inputs
+are adjustable at the top of `stand.scad`.
+
 ## Before printing: verify these assumptions
 
-Several numbers were estimated, not measured, because they were hard to
-pin down without disassembling the meter or taking calipers to it. All
-of them live in the "ADJUST" sections at the top of `stand.scad`.
-Change a value, re-render, reprint the small clip end if needed — the
-part is cheap to iterate.
+- `screw_height_from_bottom` (115mm default): distance from the
+  meter's bottom edge, along the back, up to the top screw. Estimated
+  from product photos, not measured on your actual unit — **measure
+  this**, it directly drives the leg length.
+- `shank_d` (2.6mm default): diameter of the screw shank under the
+  head. Only the head (5.1mm) and the recess it sits in (~5.6mm) were
+  actually measured.
+- `base_t` (1.6mm default): must be thinner than the gap you actually
+  get by loosening the screw a couple of turns. Thin it down if the
+  tab won't slide in.
+- `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
+  length against how far the leg has to swing out. Adjust and
+  re-derive `leg_length` (automatic) if you want a shorter/longer leg.
 
-- `screw_height_from_bottom` (35mm default): distance from the meter's
-  bottom edge, measured along the back, up to the screw center. This is
-  a guess and directly controls the leg length / how the whole stand
-  sits. **Measure this on the real meter.**
-- `shank_d` (3mm default): diameter of the screw shank right under the
-  head. Only the head diameter (5.1mm) was actually measured.
-- `hook_ceiling` (0.8mm default): thickness of the thin plastic wall
-  that traps the screw head. If the bracket won't slide on, thin this
-  down; if it doesn't grip / feels loose, thicken it slightly.
-- `pocket_dia` / `pocket_depth` (9mm / 4.5mm): the case has a curved,
-  raised area (~4mm wide, ~3mm tall) surrounding the screw hole. These
-  are cut as an oversized flat-bottomed relief pocket so the clip
-  plate sits flush without needing the exact profile — but "oversized"
-  is still a guess. If the plate rocks on the case, enlarge these.
+## Assembly
 
-## How it fits together
-
-- The screw head drops through a wide entry hole, then the bracket
-  slides down so the shank seats in a narrower slot — a standard
-  keyhole mount. The screw is never removed.
-- A flat-bottomed pocket on the mating face clears the raised
-  boss/curve around the screw hole.
-- A wide foot (46 x 24mm) sits flat on the table for tip resistance
-  while handling things one-handed.
-
-## Printing notes
-
-- No supports needed if the foot is printed flat on the bed (the
-  design is built directly in its "in use" orientation, which happens
-  to already sit flat-side-down).
-- PLA or PETG both fine; this only carries the meter's weight, not
-  ongoing dynamic load.
+1. Loosen (don't remove) the top case screw a couple of turns.
+2. Slide `base_tab` in sideways so the slot captures the shank, then
+   retighten the screw to clamp it flush.
+3. Sandwich `leg`'s knuckle between the base's two knuckles, push the
+   M3 screw through, add the nut.
+4. Tighten the nut until the leg holds its position under the meter's
+   weight but you can still reposition it by hand.
