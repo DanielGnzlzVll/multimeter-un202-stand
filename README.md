@@ -5,17 +5,19 @@ the existing top case screw (the one just below the jaw) as the mount
 point. Three printed parts (pick one of the two base options) plus,
 for the screw-based base, one M3 screw and nut:
 
-- **`base_tab()`** — a small, thin tab with a closed keyhole slot that
-  hooks under the *loosened* top case screw (you don't remove it, just
-  back it off a couple of turns) and sits flush against the case once
-  retightened. The slot is fully enclosed by material, not open to the
-  tab's edge, so it can't slide off by itself from a loosened screw,
-  vibration, or gravity — only by deliberately realigning it back over
-  the entry hole.
+- **`base_tab()`** — a small tab with a plain, fully-enclosed hole for
+  a *replacement* screw (head ~5mm, shank ~3mm — swap in for the
+  original case screw). The original screw comes out completely, is
+  passed through this hole from behind, and driven back into the
+  case, so its head clamps the tab flush. Because it's a plain hole
+  (not a slot), the tab can only come off by being fully unscrewed
+  again.
 - **`base_plug()`** — a hardware-free alternative: a peg that presses
   tightly into the screw's recess (~5.6mm) instead of using the screw
-  at all. Simpler assembly, but it means pulling the screw out
-  permanently and relying on friction alone to hold the peg in place.
+  at all. Split into flexible fingers (a simple collet) so it
+  self-adjusts across a range of real hole sizes instead of relying on
+  one exact diameter. Simpler assembly, but it means pulling the screw
+  out permanently and relying on the peg's grip alone.
 - **`leg()`** — attaches to whichever base through a printed knuckle
   hinge, pinned with an M3 screw and nut. This is the part that
   actually folds flat against the meter when stowed and swings out to
@@ -97,25 +99,31 @@ than fudging `screw_height_from_bottom` (a measurement) or the angles
 - `shank_d` (2.6mm default): diameter of the screw shank under the
   head. Only the head (5.1mm) and the recess it sits in (~5.6mm) were
   actually measured.
-- `base_t` (1.6mm default): must be thinner than the gap you actually
-  get by loosening the screw a couple of turns. Thin it down if the
-  tab won't slide in. (Only matters for `base_tab`.) Only the zone
-  that actually slides under the screw head stays this thin — past the
+- `new_screw_head_d` (5mm) / `new_screw_shank_d` (3mm): the
+  replacement screw's dimensions — both estimates, measure the actual
+  screw you're using. `base_t` (1.6mm) no longer has to stay thinner
+  than a loosened-screw gap now that the screw is fully removed for
+  installation, but there's no reason to change it either. Past the
   screw hole, `base_tab` tapers up to a much thicker, wider anchor
   block (`base_thick_t` 5mm, `base_thick_w` 14mm) for the hinge
   fingers, the same reasoning as `base_plug`'s peg-to-flange taper.
-- `base_w` (14mm default, up from 9mm): width of the thin insertion
-  zone the screw head actually clamps down on. Widened to match
-  `base_thick_w` so the screw presses the tab against the case over a
-  much bigger flat area instead of a strip barely wider than the head
-  itself.
-- `peg_len` (5.5mm default) and `peg_interference` (0.15mm default): how
+- `base_w` (14mm default, up from 9mm): width of the zone the screw
+  head clamps down on. Widened to match `base_thick_w` so the screw
+  presses the tab against the case over a much bigger flat area
+  instead of a strip barely wider than the head itself.
+- `peg_len` (5.5mm default) and `peg_interference` (0.4mm default): how
   deep the screw's recess actually is, and how much oversized to print
   the peg for a tight press fit. `peg_len` is kept 0.5mm short of the
   full estimated recess depth so the peg doesn't bottom out/crash into
   whatever is at the base of that hole before the flange seats flush.
   Both are guesses — start with a test print of just `base_plug()`
   before committing to a full print. (Only matters for `base_plug`.)
+- `base_plug`'s peg is split into `peg_slot_count` (3) flexible
+  fingers by `peg_slots()` — a simple collet, so it self-adjusts to a
+  slightly bigger or smaller real hole (compressing or springing out)
+  instead of being one rigid diameter that's either loose or won't go
+  in. `peg_solid_top` (1mm) keeps a solid, unsplit hub at the flange
+  end for the fingers to cantilever from.
 - `base_plug`'s flange (22mm diameter, 3mm thick) and gusseted fingers
   are sized to comfortably out-span the hinge fingers and give the
   leg's leverage a wide shoulder to load into — deliberately sturdier
@@ -145,10 +153,14 @@ than fudging `screw_height_from_bottom` (a measurement) or the angles
 - `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
   length against how far the leg has to swing out. Adjust and
   re-derive `leg_length` (automatic) if you want a shorter/longer leg.
-- `base_tab`'s slot is a closed keyhole (`entry_x`/`shank_x`/`taper_x`,
-  all derived from `screw_head_d`, `head_clearance`, and
-  `shank_hole_d`) instead of a slot open to the tab's edge. `base_l`
-  grew (11mm → 14mm) to fit it.
+- `base_gap_pad` (1.5mm) and `base_m3_hole_d` (4.2mm, up from the
+  shared `m3_hole_d` 3.6mm): after printing the leg, its actual
+  knuckle didn't leave a clear path for the M3 screw through both
+  bases' finger holes — printed solid features commonly come out
+  slightly oversized and holes slightly undersized, and a tight
+  nominal fit and a tight nominal bore stack up fast. These two widen
+  the bases' own finger gap and hinge bore only — `leg()`'s own
+  dimensions (and the already-printed part) are completely untouched.
 - `leg`'s foot pad matches the strip's own width/thickness (`foot_w` =
   `leg_w`, `foot_t` = `leg_t`) instead of being wider and thinner, so
   the whole leg is one constant rectangular cross-section end to end —
@@ -158,18 +170,18 @@ than fudging `screw_height_from_bottom` (a measurement) or the angles
 
 ## Assembly
 
-**With `base_tab` (screw stays in the meter):**
-1. Loosen (don't remove) the top case screw enough for the head to
-   clear `base_t` plus pass through the keyhole's entry hole.
-2. Bring the tab up so the entry hole passes over the screw head, then
-   slide the tab so the shank moves into the channel and settles at
-   its resting hole. Retighten the screw to clamp it flush.
+**With `base_tab` (replacement screw):**
+1. Remove the original case screw entirely.
+2. Pass the replacement screw through `base_tab`'s hole from behind,
+   then drive it into the case's original threaded hole. The bigger
+   head clamps the tab flush against the case.
 
 **With `base_plug` (no hardware, screw comes out):**
 1. Remove the top case screw entirely.
 2. Press `base_plug`'s peg firmly into the empty recess until the
-   flange seats against the case. Sand the peg slightly if it won't
-   go in; it should take real force to remove once seated.
+   flange seats against the case. The split fingers should self-adjust
+   to your actual hole size; sand the peg down a bit if it's still too
+   tight to seat fully.
 
 **Both:**
 3. Sandwich `leg`'s knuckle between the base's two knuckles, push the

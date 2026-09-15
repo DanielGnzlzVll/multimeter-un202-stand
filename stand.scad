@@ -53,19 +53,28 @@ leg_length_raw = screw_height_from_bottom * sin(tilt_angle) / sin(tilt_angle - d
 leg_shorten = 25;
 leg_length = leg_length_raw - leg_shorten;
 
-// ---------------- Base tab (captures under the case screw) -------
-base_t = 1.6;  // thickness -- must be thinner than the gap you get by
-               // loosening the screw a couple of turns. Only the zone
-               // that actually slides under the screw head stays this
-               // thin -- see base_thick_t below.
-base_l = 14;   // length, insertion edge to hinge knuckles -- lengthened
-               // from 11mm to fit the closed keyhole slot below
-base_w = 14;   // width of the thin insertion zone -- widened from 9mm
-               // so the screw head presses down on a much bigger flat
-               // area, clamping the tab to the case more securely,
-               // instead of a narrow strip barely wider than the head
-head_clearance = 0.6;  // extra diameter so the screw head slides
-                        // through the keyhole's entry hole easily
+// ---------------- Base tab (through-hole for a replacement screw) ---
+// The original case screw is being swapped for a different one (head
+// ~5mm, shank ~3mm) that's removed entirely, passed through a plain
+// hole in the tab, and driven back into the case -- so the head
+// clamps the tab flush against the case. This replaced an earlier
+// loosen-and-slide keyhole design sized for the original screw; a
+// plain hole is simpler now that the screw comes all the way out, and
+// -- as a bonus -- means the tab can't come loose on its own at all,
+// since it can only be removed by fully unscrewing it again.
+new_screw_head_d       = 5;    // ADJUST -- replacement screw's head
+new_screw_shank_d      = 3;    // ADJUST -- replacement screw's shank
+new_screw_shank_clear  = 0.5;
+new_screw_hole_d       = new_screw_shank_d + new_screw_shank_clear;
+
+base_t = 1.6;  // thickness at the screw hole -- doesn't need to be
+               // this thin anymore now that the screw is fully
+               // removed for installation, but no reason to change it
+base_l = 13;   // length, insertion edge to hinge knuckles
+base_w = 14;   // width of the zone the screw head clamps down on --
+               // widened from 9mm so it presses on a much bigger flat
+               // area, instead of a narrow strip barely wider than
+               // the head
 
 // Past the screw hole, the tab doesn't need to stay thin -- nothing
 // there has to slide under the screw head -- so it tapers up to a
@@ -77,9 +86,26 @@ base_thick_w = 14;  // width at the hinge end -- out-spans the fingers
                      // the original 9mm tab the fingers overhung badly
 
 // ---------------- Press-fit base plug (no hardware) ---------------
-peg_interference = 0.15;  // print the peg this much OVER recess_d for a
-                           // tight press fit; sand down if too tight
+// The peg alone (a rigid cylinder) was too loose -- printed hole sizes
+// vary enough in practice that a single fixed diameter can't reliably
+// grip. peg_interference is bumped up, and the peg itself is split
+// into flexible fingers (see peg_slot_count etc. below) that compress
+// or spring out to self-adjust across a range of real hole sizes,
+// instead of relying on hitting one exact diameter.
+peg_interference = 0.4;   // print the peg this much OVER recess_d;
+                           // the split fingers below let it compress
+                           // if that's too tight for your actual hole
 peg_d    = recess_d + peg_interference;
+peg_slot_count = 3;    // number of flexible fingers the peg is split
+                        // into -- each can flex independently, so the
+                        // peg self-adjusts to a slightly bigger or
+                        // smaller real hole instead of being a single
+                        // rigid diameter that's either loose or won't
+                        // go in at all
+peg_slot_w     = 0.6;  // slot width -- thin but printable at $fn=48
+peg_solid_top  = 1;    // solid, unsplit hub left at the peg's own top
+                        // (flange end) so the fingers have something
+                        // rigid to cantilever from
 peg_len  = 5.5;  // ADJUST -- how deep the recess actually is. Kept
                   // 0.5mm short of the full estimated recess depth so
                   // the peg doesn't bottom out/crash into whatever is
@@ -119,6 +145,20 @@ finger_w      = 6;                 // width of each base knuckle finger --
 knuckle_gap   = finger_w;          // gap between the two base fingers
 leg_knuckle_w = finger_w - 0.4;    // leg's single knuckle, fits the gap
 hinge_span    = 2 * finger_w + knuckle_gap;
+
+// The leg is already printed -- these two only touch base_tab()/
+// base_plug(), never leg(), so the real printed part is unaffected.
+// After printing, the leg's actual knuckle didn't leave a clear path
+// for the M3 screw through both bases' finger holes: printed parts
+// commonly come out slightly oversized on solid features and
+// undersized on holes, so a tight nominal fit and a tight nominal
+// bore can stack up into no usable clearance at all. Both give the
+// real, physical leg more room to seat centered and the screw more
+// room to find a straight path through all three holes.
+base_gap_pad  = 1.5;   // extra width added to the fingers' own gap
+base_m3_hole_d = 4.2;  // base-side hinge bore diameter (leg's own
+                        // bore stays at m3_hole_d, unchanged)
+base_hinge_span = 2 * finger_w + knuckle_gap + base_gap_pad;
 
 // ---------------- Leg -----------------------------------------------
 // Widened from the previous version, including the "waist" right
@@ -165,27 +205,13 @@ module teardrop_hole(d, h) {
 // Base tab (screw version)
 // ====================================================================
 module base_tab() {
-    // Closed keyhole slot instead of an open-sided one: a head-sized
-    // entry hole (entry_x), fully enclosed by material -- not open to
-    // the tab's edge -- connected by a narrow channel to where the
-    // shank actually rests once installed (shank_x). To install: back
-    // the screw out enough for the head to clear base_t, bring the tab
-    // up so the entry hole passes over the head, then slide it so the
-    // shank moves into the channel and settles at shank_x, then
-    // retighten. Because the entry hole isn't at the edge, the tab
-    // can't slide off by itself -- from a loosened screw, vibration,
-    // gravity, whatever -- it can only come off by being deliberately
-    // realigned back over the entry hole.
-    entry_d  = screw_head_d + head_clearance;
-    entry_x  = entry_d/2 + 1;
-    shank_x  = entry_x + 3.5;
-    // stay thin a bit past the shank hole for clearance, then taper up
-    // to the thick anchor block -- the taper itself starts well clear
-    // of the slot/hole cutting below
-    taper_x = shank_x + 1.5;
+    // Plain hole for the replacement screw's shank -- fully enclosed
+    // by material (not a slot to any edge), positioned with margin on
+    // both sides before the taper starts.
+    screw_x = new_screw_head_d/2 + 1.5;
+    taper_x = screw_x + new_screw_head_d/2 + 1.5;
     difference() {
         union() {
-            // thin insertion pad -- slides under the loosened screw head
             translate([0, -base_w/2, 0])
                 cube([taper_x, base_w, base_t]);
             // taper from the thin pad up to a thick, wide anchor block
@@ -195,7 +221,7 @@ module base_tab() {
                 translate([base_l - 0.1, -base_thick_w/2, 0])
                     cube([0.1, base_thick_w, base_thick_t]);
             }
-            for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
+            for (yc = [-(base_gap_pad/2 + knuckle_gap/2 + finger_w/2), (base_gap_pad/2 + knuckle_gap/2 + finger_w/2)])
                 translate([base_l, yc, knuckle_r])
                     rotate([-90, 0, 0])
                         cylinder(d = knuckle_od, h = finger_w, center = true);
@@ -209,27 +235,43 @@ module base_tab() {
             // in the leg's swept rotation path). Only spans each
             // finger's own Y width, not the gap between them, so it
             // can't interfere with the leg's knuckle sliding in there.
-            for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
+            for (yc = [-(base_gap_pad/2 + knuckle_gap/2 + finger_w/2), (base_gap_pad/2 + knuckle_gap/2 + finger_w/2)])
                 translate([base_l, yc - finger_w/2, 0])
                     cube([knuckle_r + 1, finger_w, base_thick_t]);
         }
-        // closed keyhole: entry hole for the screw head, channel, then
-        // the shank's resting hole -- none of it open to the tab's edge
-        translate([entry_x, 0, -0.5])
-            cylinder(d = entry_d, h = base_t + 1);
-        translate([entry_x, -shank_hole_d/2, -0.5])
-            cube([shank_x - entry_x, shank_hole_d, base_t + 1]);
-        translate([shank_x, 0, -0.5])
-            cylinder(d = shank_hole_d, h = base_t + 1);
-        // hinge bolt through both fingers -- cutter extends well past
-        // the fingers' own Y edges (not just ~1mm) since a small margin
-        // there left a hair-thin sliver of uncut material right at the
-        // finger's end face, confirmed by intersecting a modeled screw
-        // shaft with the part and finding real (if tiny) overlap
+        // plain through-hole -- the replacement screw is fully removed,
+        // passed through here, and driven back into the case, so the
+        // head clamps the tab flush. Fully enclosed, not a slot, so the
+        // tab can't come loose on its own at all.
+        translate([screw_x, 0, -0.5])
+            cylinder(d = new_screw_hole_d, h = base_t + 1);
+        // hinge bolt through both fingers -- wider bore and gap (see
+        // base_gap_pad/base_m3_hole_d) than the leg's own knuckle/bore,
+        // since the printed leg didn't leave a clear screw path
+        // otherwise: solid features print slightly big, holes print
+        // slightly small, and those stack up fast on a tight nominal fit
         translate([base_l, 0, knuckle_r])
             rotate([-90, 0, 0])
-                teardrop_hole(m3_hole_d, hinge_span + 10);
+                teardrop_hole(base_m3_hole_d, base_hinge_span + 10);
     }
+}
+
+// ====================================================================
+// Peg slots -- cuts the peg into peg_slot_count flexible fingers (a
+// simple split/collet pin) so it self-adjusts across a range of real
+// hole sizes instead of relying on one exact nominal diameter: each
+// finger can flex inward if the actual hole is a bit tight, or spring
+// outward if it's a bit loose. Slots start right past the lead-in
+// chamfer and stop peg_solid_top short of the peg's own top, leaving a
+// solid, unsplit hub for the fingers to cantilever from.
+// ====================================================================
+module peg_slots() {
+    slot_len = peg_d;
+    slot_h   = peg_len - lead_in - peg_solid_top;
+    for (i = [0 : peg_slot_count - 1])
+        rotate([0, 0, i * 360 / peg_slot_count])
+            translate([0, -peg_slot_w/2, lead_in])
+                cube([slot_len, peg_slot_w, slot_h]);
 }
 
 // ====================================================================
@@ -245,19 +287,24 @@ module base_plug() {
     // reinforces the finger-to-flange joint, not the finger itself, so
     // its top is capped below the hole's lower edge (with a small
     // margin) rather than a fixed height that could overlap the bore.
-    gusset_top_z = finger_z - m3_hole_d/2 - 0.5;
+    gusset_top_z = finger_z - base_m3_hole_d/2 - 0.5;
     gusset_h = gusset_top_z - peg_len;
     difference() {
         union() {
-            cylinder(d1 = peg_d * 0.8, d2 = peg_d, h = lead_in);
-            translate([0, 0, lead_in])
-                cylinder(d = peg_d, h = peg_len - lead_in);
+            difference() {
+                union() {
+                    cylinder(d1 = peg_d * 0.8, d2 = peg_d, h = lead_in);
+                    translate([0, 0, lead_in])
+                        cylinder(d = peg_d, h = peg_len - lead_in);
+                }
+                peg_slots();
+            }
             translate([0, 0, peg_len])
                 cylinder(d = flange_d, h = flange_t);
             // each finger is hull()'d to a gusset pad seated in the
             // flange, so the finger-to-flange joint is a gradual taper
             // instead of a sharp, stress-concentrating inside corner
-            for (yc = [-(knuckle_gap/2 + finger_w/2), (knuckle_gap/2 + finger_w/2)])
+            for (yc = [-(base_gap_pad/2 + knuckle_gap/2 + finger_w/2), (base_gap_pad/2 + knuckle_gap/2 + finger_w/2)])
                 hull() {
                     translate([-gusset_w/2, yc - finger_w/2, peg_len])
                         cube([gusset_w, finger_w, gusset_h]);
@@ -266,14 +313,14 @@ module base_plug() {
                             cylinder(d = knuckle_od, h = finger_w, center = true);
                 }
         }
-        // hinge bolt through both fingers -- cutter extends well past
-        // the fingers' own Y edges (not just ~1mm) since a small margin
-        // there left a hair-thin sliver of uncut material right at each
-        // finger's end face, confirmed by intersecting a modeled screw
-        // shaft with the part and finding real (if tiny) overlap there
+        // hinge bolt through both fingers -- wider bore and gap (see
+        // base_gap_pad/base_m3_hole_d) than the leg's own knuckle/bore,
+        // since the printed leg didn't leave a clear screw path
+        // otherwise: solid features print slightly big, holes print
+        // slightly small, and those stack up fast on a tight nominal fit
         translate([0, 0, finger_z])
             rotate([-90, 0, 0])
-                teardrop_hole(m3_hole_d, hinge_span + 10);
+                teardrop_hole(base_m3_hole_d, base_hinge_span + 10);
     }
 }
 
