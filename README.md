@@ -68,11 +68,16 @@ are adjustable at the top of `stand.scad`.
 - `base_t` (1.6mm default): must be thinner than the gap you actually
   get by loosening the screw a couple of turns. Thin it down if the
   tab won't slide in. (Only matters for `base_tab`.)
-- `peg_len` (5mm default) and `peg_interference` (0.15mm default): how
+- `peg_len` (6mm default) and `peg_interference` (0.15mm default): how
   deep the screw's recess actually is, and how much oversized to print
   the peg for a tight press fit. Both are guesses — start with a test
   print of just `base_plug()` before committing to a full print.
   (Only matters for `base_plug`.)
+- `base_plug`'s flange (16mm diameter, 3mm thick) and gusseted fingers
+  are sized to comfortably out-span the hinge fingers and give the
+  leg's leverage a wide shoulder to load into — deliberately sturdier
+  than the bare minimum, since this piece takes all the load with no
+  screw backing it up.
 - `deploy_hinge_angle` (15° default): arbitrary choice balancing leg
   length against how far the leg has to swing out. Adjust and
   re-derive `leg_length` (automatic) if you want a shorter/longer leg.
