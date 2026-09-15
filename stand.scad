@@ -45,7 +45,13 @@ deploy_hinge_angle = 15;  // how far the leg swings out (from lying flush
 // (from flush-against-the-case) lands the foot on the table with the
 // meter resting on its bottom edge at tilt_angle. See README for the
 // derivation.
-leg_length = screw_height_from_bottom * sin(tilt_angle) / sin(tilt_angle - deploy_hinge_angle);
+leg_length_raw = screw_height_from_bottom * sin(tilt_angle) / sin(tilt_angle - deploy_hinge_angle);
+// The geometric derivation above came out longer than the meter itself
+// in practice. Trimmed directly rather than distorting the measured/
+// chosen inputs above (which are either a real measurement or a
+// deliberate angle choice, not free knobs to fudge for length alone).
+leg_shorten = 25;
+leg_length = leg_length_raw - leg_shorten;
 
 // ---------------- Base tab (captures under the case screw) -------
 base_t = 1.6;  // thickness -- must be thinner than the gap you get by
@@ -53,7 +59,10 @@ base_t = 1.6;  // thickness -- must be thinner than the gap you get by
                // that actually slides under the screw head stays this
                // thin -- see base_thick_t below.
 base_l = 11;   // length, insertion edge to hinge knuckles
-base_w = 9;    // width of the thin insertion zone
+base_w = 14;   // width of the thin insertion zone -- widened from 9mm
+               // so the screw head presses down on a much bigger flat
+               // area, clamping the tab to the case more securely,
+               // instead of a narrow strip barely wider than the head
 
 // Past the screw hole, the tab doesn't need to stay thin -- nothing
 // there has to slide under the screw head -- so it tapers up to a

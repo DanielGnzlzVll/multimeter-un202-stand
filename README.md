@@ -72,12 +72,17 @@ sin(tilt_angle)` above the table. Swinging the leg out from
 flush-against-the-case by `deploy_hinge_angle` needs a leg length of:
 
 ```
-leg_length = screw_height_from_bottom * sin(tilt_angle) / sin(tilt_angle - deploy_hinge_angle)
+leg_length_raw = screw_height_from_bottom * sin(tilt_angle) / sin(tilt_angle - deploy_hinge_angle)
+leg_length = leg_length_raw - leg_shorten
 ```
 
 (`deploy_hinge_angle` must stay less than `tilt_angle`, or the leg
 never reaches the table no matter how long it is.) All three inputs
-are adjustable at the top of `stand.scad`.
+are adjustable at the top of `stand.scad`. `leg_shorten` (25mm default)
+trims the geometric result directly — in practice it came out longer
+than the meter itself, and shortening it was simpler and more honest
+than fudging `screw_height_from_bottom` (a measurement) or the angles
+(deliberate choices) just to change the length.
 
 ## Before printing: verify these assumptions
 
@@ -95,6 +100,11 @@ are adjustable at the top of `stand.scad`.
   screw hole, `base_tab` tapers up to a much thicker, wider anchor
   block (`base_thick_t` 5mm, `base_thick_w` 14mm) for the hinge
   fingers, the same reasoning as `base_plug`'s peg-to-flange taper.
+- `base_w` (14mm default, up from 9mm): width of the thin insertion
+  zone the screw head actually clamps down on. Widened to match
+  `base_thick_w` so the screw presses the tab against the case over a
+  much bigger flat area instead of a strip barely wider than the head
+  itself.
 - `peg_len` (5.5mm default) and `peg_interference` (0.15mm default): how
   deep the screw's recess actually is, and how much oversized to print
   the peg for a tight press fit. `peg_len` is kept 0.5mm short of the
