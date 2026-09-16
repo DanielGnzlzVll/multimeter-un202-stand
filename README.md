@@ -31,6 +31,27 @@ Render/print with:
 openscad --render -o stand.stl stand.scad
 ```
 
+## File formats
+
+- `stand.stl` — all three parts, laid out for printing (this is what
+  you actually print).
+- `stand.step` — the same layout, converted to STEP for tools that
+  need it.
+- `step/base_tab.step`, `step/base_plug.step`, `step/leg.step` — each
+  part individually, for importing into a CAD assembly.
+
+**Important caveat on the STEP files:** OpenSCAD has no true CAD
+kernel — every curved surface (every cylinder, every hole) is always a
+faceted polygon approximation (controlled by `$fn`), never a smooth
+analytic surface. The STEP files here are that same faceted mesh
+wrapped in STEP's container format (converted from the STL with
+OpenCASCADE), not a real parametric/smooth-surface model. They're
+useful for tools that only accept STEP, or for importing into a CAD
+assembly, but don't expect smooth cylinders if you inspect the
+surfaces closely, and don't expect to edit dimensions non-destructively
+the way you could with a native CAD part — `stand.scad` is still the
+actual source of truth for any dimensional changes.
+
 ## Renders
 
 All three parts, laid out as they print:
